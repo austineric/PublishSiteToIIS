@@ -1,0 +1,1 @@
+pwsh.exe -file .\Publish.ps1
