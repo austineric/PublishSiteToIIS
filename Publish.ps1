@@ -26,14 +26,29 @@ Try {
     Clear-Host
 
     Do {
-        Write-Host ""    
-        Write-Host "Options:"
-        Write-Host "1. Publish to a queue directory for automated publishing later"
-        Write-Host "2. Publish immediately to the live website directory"
-        $Selection=Read-Host "Enter selection"
-    }
-    Until (($Selection -eq 1 ) -or ($Selection -eq 2))
 
+        $Confirm=""
+
+        Do {
+            Write-Host ""    
+            Write-Host "Options:"
+            Write-Host "1. Publish to a queue directory for automated publishing later"
+            Write-Host "2. Publish immediately to the live website directory"
+            $Selection=Read-Host "Enter selection"
+        }
+        Until (($Selection -eq 1 ) -or ($Selection -eq 2))
+
+        if ($Selection -eq 1)
+        {
+            $Confirm="y"    #automatically proceed with publishing to queue
+        }
+        elseif ($Selection -eq 2)
+        {
+            $Confirm=Read-Host "This will publish immediately to the live website directory. Are you sure you want to continue (y/n)?"  #confirm publishing to live
+        }
+    }
+    Until ($Confirm -eq "y")
+    
     #ensure the project builds successfully
     Write-Host "Ensuring project builds successfully..."
     dotnet build | Out-Null
@@ -55,7 +70,12 @@ Try {
         Set-Location $QueueDirectory | Out-Null
 
         #ensure queue directory is empty
-        Remove-Item *
+        Write-Host "Removing any items from queue directory..."
+        Remove-Item * -Recurse
+
+        #change location to the project directory
+        Write-Host "Switching to $($CurrentDirectory)..."
+        Set-Location $CurrentDirectory | Out-Null
 
         #publish site to queue directory
         Write-Host "Publishing site to queue directory..."
