@@ -172,7 +172,7 @@ Catch {
 
 Finally {
 
-    $PublishLogData | Select-Object Date, Result, Message | Export-Csv -Path $PublishLogLocation -Append -NoTypeInformation
+    $PublishLogData | Select-Object Date, Result, Message, "Release Notes" | Export-Csv -Path $PublishLogLocation -Append -NoTypeInformation
     
     #clear out release notes (if any)
     if ($ReleaseNotes.Length -gt 0)
