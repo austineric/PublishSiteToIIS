@@ -20,6 +20,8 @@ $Selection=0
 $QueueDirectory=""
 $WebsiteURL=""
 $WebsiteDirectory=""
+$ReleaseNotesPath=(Join-Path -Path $CurrentDirectory -ChildPath "Release notes.txt")
+$ReleaseNotes=""
 
 Try {
 
@@ -55,7 +57,13 @@ Try {
     If ($LASTEXITCODE -ne 0) {
         Throw "dotnet build did not return a success code of 0"
     }
-    
+
+    #get the release notes (if any)
+    if (Test-Path -Path $ReleaseNotesPath)
+    {
+        $ReleaseNotes=(Get-Content -Path $ReleaseNotesPath )
+    }
+
     if ($Selection -eq 1)   #publish to a queue directory for automated publishing later
     {
 
@@ -85,7 +93,7 @@ Try {
         }
 
         #set publish log message
-        $PublishLogData+=New-Object -TypeName PSCustomObject -Property @{"Date"=(Get-Date).ToString(); "Result"="Success"; "Message"="Queue directory"}
+        $PublishLogData+=New-Object -TypeName PSCustomObject -Property @{"Date"=(Get-Date).ToString(); "Result"="Success"; "Message"="Queue directory"; "Release Notes"=$ReleaseNotes}
 
         Write-Host "Successfully published to queue directory."
 
@@ -144,7 +152,7 @@ Try {
         }
 
         #set publish log message
-        $PublishLogData+=New-Object -TypeName PSCustomObject -Property @{"Date"=(Get-Date).ToString(); "Result"="Success"; "Message"="Live website directory"}
+        $PublishLogData+=New-Object -TypeName PSCustomObject -Property @{"Date"=(Get-Date).ToString(); "Result"="Success"; "Message"="Live website directory"; "Release Notes"=$ReleaseNotes}
         
         #open website
         Write-Host "Publish succeeded, opening website..."
@@ -156,7 +164,7 @@ Try {
 Catch {
 
     #set publish log message
-    $PublishLogData+=New-Object -TypeName PSCustomObject -Property @{"Date"=(Get-Date).ToString(); "Result"="Failed"; Message=$Error[0]}
+    $PublishLogData+=New-Object -TypeName PSCustomObject -Property @{"Date"=(Get-Date).ToString(); "Result"="Failed"; Message=$Error[0]; "Release Notes"=$ReleaseNotes}
     Write-Host "Publish failed, error message follows..."
     Write-Host $Error[0]
 
@@ -165,6 +173,11 @@ Catch {
 Finally {
 
     $PublishLogData | Select-Object Date, Result, Message | Export-Csv -Path $PublishLogLocation -Append -NoTypeInformation
-    Pause
+    
+    #clear out release notes (if any)
+    if ($ReleaseNotes.Length -gt 0)
+    {
+        Set-Content -Path $ReleaseNotesPath -Value $null
+    }
 
 }
